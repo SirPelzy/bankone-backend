@@ -21,6 +21,9 @@ export async function HEAD() {
 export async function POST(request: Request) {
   try {
     const rawBody = await request.text();
+    const hasSignatureHeaders =
+      Boolean(request.headers.get("nomba-signature") ?? request.headers.get("nomba-sig-value")) &&
+      Boolean(request.headers.get("nomba-timestamp"));
 
     if (!rawBody.trim()) {
       return ok({
@@ -29,16 +32,28 @@ export async function POST(request: Request) {
       });
     }
 
+    if (!hasSignatureHeaders) {
+      return ok({
+        provider: "nomba",
+        status: "verification_acknowledged",
+        processed: false
+      });
+    }
+
     let env: ReturnType<typeof getEnv>;
     try {
       env = getEnv();
     } catch (error) {
-      throw new ApiError(
-        428,
-        "webhook_not_configured",
-        "Nomba webhook is reachable, but NOMBA_WEBHOOK_SIGNATURE_KEY must be set before signed webhooks can be processed.",
-        error instanceof Error ? error.message : error
-      );
+      return ok({
+        code: "webhook_not_configured",
+        provider: "nomba",
+        status: "reachable_but_not_configured",
+        processed: false,
+        detail:
+          error instanceof Error
+            ? error.message
+            : "NOMBA_WEBHOOK_SIGNATURE_KEY must be set before signed webhooks can be processed."
+      });
     }
 
     if (!verifyNombaWebhookSignature(rawBody, request.headers)) {
