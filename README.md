@@ -21,6 +21,21 @@ This is built for a real test environment, not mocked demos. Mono and Nomba adap
 5. Configure Nomba webhook URL: `/api/webhooks/nomba`.
 6. Subscribe Nomba to payment success/failure/reversal and payout success/failure/refund events.
 
+## Worker Scheduling
+
+The built-in Vercel cron is configured for Hobby compatibility:
+
+```json
+{ "path": "/api/workers/funding", "schedule": "0 3 * * *" }
+```
+
+Vercel Hobby only allows cron jobs that run once per day. For product testing that needs faster funding processing, use either:
+
+- Vercel Pro with a more frequent schedule such as `*/5 * * * *`.
+- An external scheduler that calls `POST /api/workers/funding` with `Authorization: Bearer $CRON_SECRET`.
+
+Keep `CRON_SECRET` set in Vercel. Vercel Cron automatically sends it as the `Authorization` header when invoking the route.
+
 ## Local Commands
 
 ```bash
