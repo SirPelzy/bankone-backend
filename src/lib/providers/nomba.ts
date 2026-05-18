@@ -183,7 +183,7 @@ export function verifyNombaWebhookSignature(rawBody: string, headers: Headers): 
   const timestamp = headers.get("nomba-timestamp");
   if (!signature || !timestamp) return false;
 
-  const payload = JSON.parse(rawBody) as {
+  let payload: {
     event_type?: string;
     requestId?: string;
     request_id?: string;
@@ -197,6 +197,12 @@ export function verifyNombaWebhookSignature(rawBody: string, headers: Headers): 
       };
     };
   };
+
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return false;
+  }
 
   const transaction = payload.data?.transaction;
   const merchant = payload.data?.merchant;

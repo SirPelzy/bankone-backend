@@ -11,7 +11,7 @@ type SupabaseClientLike = {
   from: (table: string) => any;
 };
 
-type NombaWebhookPayload = {
+export type NombaWebhookPayload = {
   event_type: string;
   requestId?: string;
   request_id?: string;
